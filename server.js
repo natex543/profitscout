@@ -96,7 +96,7 @@ function scoreProduct(p) {
   return { ...p, grossMargin, demoScore: score, supplierUrl: `/go/${p.id}`, trendExploreUrl: `https://trends.google.com/trends/explore?geo=US&q=${encodeURIComponent(p.name)}` };
 }
 
-const aiProvider = (process.env.AI_PROVIDER || "ollama").toLowerCase();
+const aiProvider = (process.env.AI_PROVIDER || "groq").toLowerCase();
 app.get("/api/trends", async (req, res) => {
   const geo = String(req.query.geo || "US").toUpperCase();
   try {
