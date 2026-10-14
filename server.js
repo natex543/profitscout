@@ -26,7 +26,130 @@ const products = [
   { id:"ice-roller", name:"Ice Facial Roller", niche:"Beauty", cost:5, price:18.99, shipping:"Lightweight", supplierSearch:"ice facial roller", notes:"Avoid medical claims; check material, seams, and cleaning instructions." },
   { id:"cable-clips", name:"Magnetic Cable Clips", niche:"Tech", cost:3, price:13.99, shipping:"Lightweight", supplierSearch:"magnetic cable clips", notes:"Check magnet strength, adhesive, and supported cable sizes." },
   { id:"laptop-stand", name:"Foldable Laptop Stand", niche:"Tech", cost:10, price:29.99, shipping:"Medium", supplierSearch:"foldable laptop stand", notes:"Test stability, load rating, portability, and device compatibility." }
+];const catalogNiches = {
+  Home: [
+    "storage organizer", "drawer divider", "cabinet organizer",
+    "sink accessory", "cleaning brush", "LED night light",
+    "closet organizer", "desk organizer", "laundry accessory",
+    "kitchen tool", "bathroom organizer", "reusable storage bag",
+    "furniture protector", "window cleaning tool", "plant accessory"
+  ],
+  Pets: [
+    "dog grooming brush", "pet travel bowl", "cat toy",
+    "pet hair remover", "dog walking accessory", "pet bed accessory",
+    "pet feeding mat", "pet waste bag holder", "pet storage organizer",
+    "interactive pet toy"
+  ],
+  Travel: [
+    "packing organizer", "travel toiletry bag", "luggage tag",
+    "travel pillow accessory", "passport holder", "cable travel case",
+    "shoe packing bag", "travel laundry bag", "compact travel mirror",
+    "luggage organizer"
+  ],
+  Fitness: [
+    "stretching strap", "yoga accessory", "workout storage bag",
+    "grip strengthener", "exercise mat accessory", "running belt",
+    "sports water bottle accessory", "fitness towel", "jump rope accessory",
+    "recovery massage ball"
+  ],
+  Beauty: [
+    "makeup organizer", "cosmetic travel pouch", "hair styling accessory",
+    "skincare storage tray", "makeup brush holder", "headband set",
+    "nail art accessory", "beauty sponge holder", "cosmetic mirror",
+    "reusable beauty accessory"
+  ],
+  Tech: [
+    "cable organizer", "phone stand", "laptop accessory",
+    "tablet holder", "webcam cover", "keyboard cleaning tool",
+    "desk cable holder", "headphone stand", "device storage pouch",
+    "screen cleaning kit"
+  ],
+  Office: [
+    "pen organizer", "document holder", "notebook accessory",
+    "desk storage tray", "book stand", "planner accessory",
+    "file organizer", "sticky note holder", "monitor riser accessory",
+    "stationery storage case"
+  ],
+  Garden: [
+    "plant support clip", "seed storage organizer", "garden hand tool",
+    "plant watering accessory", "garden label set", "plant pot accessory",
+    "garden storage bag", "seedling tray accessory", "plant tie set",
+    "outdoor tool organizer"
+  ],
+  Fashion: [
+    "jewelry storage pouch", "belt organizer", "scarf storage hanger",
+    "hat organizer", "sunglasses case", "shoe storage accessory",
+    "handbag organizer", "clothing travel pouch", "watch storage case",
+    "closet accessory"
+  ],
+  Auto: [
+    "car seat organizer", "car cleaning brush", "trunk storage accessory",
+    "car cable organizer", "car visor organizer", "car trash container",
+    "car detailing cloth", "car document holder", "car cup holder accessory",
+    "car storage hook"
+  ]
+};
+
+const catalogModifiers = [
+  "compact", "foldable", "reusable", "lightweight", "adjustable",
+  "portable", "space-saving", "washable", "multi-purpose", "stackable",
+  "travel-size", "minimalist", "heavy-duty", "slim", "everyday",
+  "easy-clean", "modular", "soft-grip", "protective", "quick-dry",
+  "magnetic", "wall-mounted", "desk-friendly", "small-space",
+  "durable", "modern", "ergonomic", "water-resistant", "multi-pack",
+  "organizing", "home-use", "travel-friendly", "simple", "versatile",
+  "storage", "tidy", "refillable", "clip-on", "non-slip",
+  "space-efficient", "washable-fabric", "easy-carry", "universal",
+  "protective-cover", "everyday-carry", "compact-storage",
+  "multi-purpose-use", "lightweight-design", "practical",
+  "easy-store", "reusable-design"
 ];
+
+const generatedProducts = [];
+const existingProductIds = new Set(products.map(p => p.id));
+const existingProductNames = new Set(
+  products.map(p => p.name.toLowerCase())
+);
+
+for (const [niche, ideas] of Object.entries(catalogNiches)) {
+  for (const idea of ideas) {
+    for (const modifier of catalogModifiers) {
+      if (products.length + generatedProducts.length >= 5000) break;
+
+      const name = `${modifier.replace(/-/g, " ")} ${idea}`;
+      const normalizedName = name.toLowerCase();
+      if (existingProductNames.has(normalizedName)) continue;
+
+      const id = `${niche}-${modifier}-${idea}`
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+      if (existingProductIds.has(id)) continue;
+
+      const costEstimate = Number(
+        (3 + ((generatedProducts.length * 7) % 1700) / 100).toFixed(2)
+      );
+
+      generatedProducts.push({
+        id,
+        name: name.replace(/\b\w/g, c => c.toUpperCase()),
+        niche,
+        cost: costEstimate,
+        price: Number((costEstimate * 2.5).toFixed(2)),
+        shipping: "Unverified",
+        supplierSearch: name,
+        costType: "ESTIMATE — NOT A VERIFIED SUPPLIER PRICE",
+        notes: "Generated product idea. Verify supplier availability, actual price, shipping, quality, and demand before selling."
+      });
+
+      existingProductNames.add(normalizedName);
+      existingProductIds.add(id);
+    }
+  }
+}
+
+products.push(...generatedProducts);
 
 
 // Free live signal: Google's public Trending Now RSS feed. It is a general search-trend feed,
