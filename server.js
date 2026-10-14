@@ -251,7 +251,7 @@ app.post("/api/research", async (req, res) => {
       mode: "demo",
       source: liveTrends.length ? "Google Trends Trending Now RSS" : "catalog only",
       summary: `Local AI is not enabled in server settings. Live Google Trends topics were ${liveTrends.length ? "loaded" : "unavailable"}; topic matches are weak signals, not proof of product sales.` ,
-      results: candidates.sort((a,b)=>(b.trendMatchCount-a.trendMatchCount) || b.demoScore-a.demoScore).slice(0,8)
+      results: candidates.sort((a,b)=>(b.trendMatchCount-a.trendMatchCount) || b.demoScore-a.demoScore).slice(0,50)
     });
   }
   try {
@@ -271,7 +271,7 @@ app.post("/api/research", async (req, res) => {
         notes: p.notes
       }));
 
-    const prompt = `You are a cautious ecommerce product research analyst. Evaluate these candidate dropshipping products for ${region}. Goal: ${goal}. Budget is estimated supplier cost per unit <= ${budget}. Do not invent sales volume, ad metrics, supplier ratings, or current prices. Google Trends signals are general search topics, not proof of product demand. Rank up to 8 products from the supplied candidates. Return valid JSON with keys summary and results. Each result must include id, opportunityScore (0-100), rationale, risks (array of strings), validationSteps (array of strings), demandEvidence (cite exact supplied trend titles only, otherwise "No direct match in current Google Trending Now feed"), and suggestedAngle. Candidates: ${JSON.stringify(promptCandidates)}`;
+    const prompt = `You are a cautious ecommerce product research analyst. Evaluate these candidate dropshipping products for ${region}. Goal: ${goal}. Budget is estimated supplier cost per unit <= ${budget}. Do not invent sales volume, ad metrics, supplier ratings, or current prices. Google Trends signals are general search topics, not proof of product demand. Rank up to 12 products from the supplied candidates. Return valid JSON with keys summary and results. Each result must include id, opportunityScore (0-100), rationale, risks (array of strings), validationSteps (array of strings), demandEvidence (cite exact supplied trend titles only, otherwise "No direct match in current Google Trending Now feed"), and suggestedAngle. Candidates: ${JSON.stringify(promptCandidates)}`;
     let parsed;
     if (aiProvider === "ollama") {
       const response = await fetch(process.env.OLLAMA_URL || "http://127.0.0.1:11434/api/generate", {
