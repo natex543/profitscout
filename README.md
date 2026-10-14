@@ -25,3 +25,14 @@ Render supplies a free `onrender.com` URL. A custom domain generally requires pu
 - The click log uses a local JSON file; free hosting has ephemeral storage, so do not rely on it for permanent analytics.
 - Before public launch, add a privacy policy, terms, contact information, affiliate disclosure, abuse controls, and persistent storage if needed.
 - Never put secrets or API keys in frontend code or a public repository.
+
+
+## Optional hosted AI on Render (free tier)
+
+The public service can use Groq's hosted model instead of local Ollama. Create a Groq account at https://console.groq.com/ and create an API key. In Render, open the ProfitScout service, choose Environment, and add these variables:
+
+- `AI_PROVIDER` = `groq`
+- `GROQ_API_KEY` = your private Groq API key
+- `GROQ_MODEL` = `llama-3.3-70b-versatile`
+
+Save changes and redeploy if Render does not deploy automatically. Never commit the API key to GitHub or put it in browser-side HTML. The free developer tier has rate and usage limits and may change; check https://console.groq.com/docs/rate-limits. If you do not configure a key, the site keeps using the demo shortlist.

@@ -111,7 +111,7 @@ app.get("/api/trends", async (req, res) => {
 });
 
 app.get("/api/products", (_req, res) => {
-  const enabled = aiProvider === "ollama" || (aiProvider === "openai" && Boolean(process.env.OPENAI_API_KEY));
+  const enabled = aiProvider === "ollama" || (aiProvider === "openai" && Boolean(process.env.OPENAI_API_KEY)) || (aiProvider === "groq" && Boolean(process.env.GROQ_API_KEY));
   res.json({ products: products.map(scoreProduct), mode: enabled ? "ai-enabled" : "demo", provider: aiProvider, note: "The catalog is a starting shortlist. Use /api/trends for live general search topics and validate each product separately." });
 });
 
@@ -123,7 +123,7 @@ app.post("/api/research", async (req, res) => {
   try { liveTrends = await getLiveTrends("US"); } catch (e) { console.warn("Trend signal unavailable during research:", e.message); }
   const candidates = baseCandidates.map(p => attachTrendEvidence(scoreProduct(p), liveTrends));
 
-  if (aiProvider !== "ollama" && !(aiProvider === "openai" && process.env.OPENAI_API_KEY)) {
+  if (aiProvider !== "ollama" && !(aiProvider === "openai" && process.env.OPENAI_API_KEY) && !(aiProvider === "groq" && process.env.GROQ_API_KEY)) {
     return res.json({
       mode: "demo",
       source: liveTrends.length ? "Google Trends Trending Now RSS" : "catalog only",
@@ -148,6 +148,26 @@ app.post("/api/research", async (req, res) => {
       if (!response.ok) throw new Error(`Ollama returned ${response.status}. Check that Ollama is running and the model is installed.`);
       const data = await response.json();
       parsed = JSON.parse(data.response);
+    } else if (aiProvider === "groq") {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: "Return only valid JSON. Do not invent market data." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.2,
+          max_tokens: 3500,
+          response_format: { type: "json_object" }
+        })
+      });
+      if (!response.ok) throw new Error(`Groq API returned ${response.status}. Check your GROQ_API_KEY and free-tier limits.`);
+      const data = await response.json();
+      const output = data.choices?.[0]?.message?.content;
+      if (!output) throw new Error("Groq returned an empty response.");
+      parsed = JSON.parse(output);
     } else {
       const response = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",

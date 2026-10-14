@@ -7,4 +7,4 @@ services:
     startCommand: npm start
     envVars:
       - key: AI_PROVIDER
-        value: demo
+        value: groq
