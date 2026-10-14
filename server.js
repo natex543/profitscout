@@ -163,7 +163,10 @@ model: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
           response_format: { type: "json_object" }
         })
       });
-      if (!response.ok) throw new Error(`Groq API returned ${response.status}. Check your GROQ_API_KEY and free-tier limits.`);
+    if (!response.ok) {
+  const errorDetails = await response.text();
+  throw new Error(`Groq API returned ${response.status}: ${errorDetails}`);
+}
       const data = await response.json();
       const output = data.choices?.[0]?.message?.content;
       if (!output) throw new Error("Groq returned an empty response.");
