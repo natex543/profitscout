@@ -3,14 +3,37 @@ import express from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Pool } from "pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data");
 const CLICKS_FILE = path.join(DATA_DIR, "affiliate-clicks.json");
 fs.mkdirSync(DATA_DIR, { recursive: true });
 app.use(express.json({ limit: "1mb" }));
+async function setupVisitorCounter() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS website_stats (
+      id INTEGER PRIMARY KEY,
+      total_visits BIGINT NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO website_stats (id, total_visits)
+    VALUES (1, 0)
+    ON CONFLICT (id) DO NOTHING
+  `);
+}
+
+setupVisitorCounter().catch(err => {
+  console.error("Visitor counter setup failed:", err.message);
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 const products = [
@@ -357,4 +380,39 @@ app.get("/api/admin/clicks", (req, res) => {
 });
 
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.post("/api/visit", async (_req, res) => {
+  try {
+    await setupVisitorCounter();
+
+    const result = await db.query(`
+      UPDATE website_stats
+      SET total_visits = total_visits + 1
+      WHERE id = 1
+      RETURNING total_visits
+    `);
+
+    res.json({
+      totalVisits: Number(result.rows[0].total_visits)
+    });
+  } catch (err) {
+    console.error("Visitor counter error:", err.message);
+    res.status(500).json({ error: "Could not count visit" });
+  }
+});
+
+app.get("/api/visits", async (_req, res) => {
+  try {
+    await setupVisitorCounter();
+
+    const result = await db.query(
+      "SELECT total_visits FROM website_stats WHERE id = 1"
+    );
+
+    res.json({
+      totalVisits: Number(result.rows[0].total_visits)
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Could not load visitor count" });
+  }
+});
 app.listen(PORT, () => console.log(`ProfitScout running on http://localhost:${PORT}`));
